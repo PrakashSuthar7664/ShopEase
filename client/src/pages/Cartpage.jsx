@@ -16,7 +16,8 @@ const Cartpage = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const totalPrice = () => cart.reduce((total, item) => total + item.price, 0).toFixed(2);
+  const totalPrice = () =>
+    cart.reduce((total, item) => total + item.price, 0).toFixed(2);
 
   // Remove item from cart
   const removeCartItem = (pid) => {
@@ -30,7 +31,9 @@ const Cartpage = () => {
   useEffect(() => {
     const getToken = async () => {
       try {
-        const { data } = await axios.get(`${process.env.REACT_APP_API}/api/v1/product/braintree/token`);
+        const { data } = await axios.get(
+          `${process.env.REACT_APP_API}/api/v1/product/braintree/token`
+        );
         setClientToken(data?.clientToken);
       } catch (error) {
         console.error("Failed to get payment token:", error);
@@ -43,30 +46,41 @@ const Cartpage = () => {
   // Initialize Braintree Hosted Fields
   useEffect(() => {
     if (clientToken) {
-      braintree.client.create({ authorization: clientToken }, (err, clientInstance) => {
-        if (err) {
-          console.error("Braintree client error:", err);
-          return;
-        }
-        braintree.hostedFields.create(
-          {
-            client: clientInstance,
-            styles: { input: { "font-size": "16px", "font-family": "Arial" } },
-            fields: {
-              number: { selector: "#card-number", placeholder: "Card Number" },
-              cvv: { selector: "#cvv", placeholder: "CVV" },
-              expirationDate: { selector: "#expiration-date", placeholder: "MM/YY" },
-            },
-          },
-          (err, hostedFieldsInstance) => {
-            if (err) {
-              console.error("Hosted Fields error:", err);
-              return;
-            }
-            setBraintreeInstance(hostedFieldsInstance);
+      braintree.client.create(
+        { authorization: clientToken },
+        (err, clientInstance) => {
+          if (err) {
+            console.error("Braintree client error:", err);
+            return;
           }
-        );
-      });
+          braintree.hostedFields.create(
+            {
+              client: clientInstance,
+              styles: {
+                input: { "font-size": "16px", "font-family": "Arial" },
+              },
+              fields: {
+                number: {
+                  selector: "#card-number",
+                  placeholder: "Card Number",
+                },
+                cvv: { selector: "#cvv", placeholder: "CVV" },
+                expirationDate: {
+                  selector: "#expiration-date",
+                  placeholder: "MM/YY",
+                },
+              },
+            },
+            (err, hostedFieldsInstance) => {
+              if (err) {
+                console.error("Hosted Fields error:", err);
+                return;
+              }
+              setBraintreeInstance(hostedFieldsInstance);
+            }
+          );
+        }
+      );
     }
   }, [clientToken]);
 
@@ -92,21 +106,22 @@ const Cartpage = () => {
           return;
         }
 
-        axios.post(
-          `${process.env.REACT_APP_API}/api/v1/product/braintree/payment`,
-          { nonce: payload.nonce, cart }
-        )
-        .then(() => {
-          localStorage.removeItem("cart");
-          setCart([]);
-          toast.success("Payment Completed Successfully");
-          navigate("/dashboard/user/orders");
-        })
-        .catch((error) => {
-          console.error("Payment failed:", error);
-          toast.error("Payment failed. Please try again.");
-        })
-        .finally(() => setLoading(false));
+        axios
+          .post(
+            `${process.env.REACT_APP_API}/api/v1/product/braintree/payment`,
+            { nonce: payload.nonce, cart }
+          )
+          .then(() => {
+            localStorage.removeItem("cart");
+            setCart([]);
+            toast.success("Payment Completed Successfully");
+            navigate("/dashboard/user/orders");
+          })
+          .catch((error) => {
+            console.error("Payment failed:", error);
+            toast.error("Payment failed. Please try again.");
+          })
+          .finally(() => setLoading(false));
       });
     } catch (error) {
       console.error("Payment processing error:", error);
@@ -127,12 +142,16 @@ const Cartpage = () => {
                 <img
                   src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${item._id}`}
                   alt={item.name}
-                  className="w-24 h-24 object-cover rounded-lg"
-                  onError={(e) => { e.target.src = '/placeholder-product-image.jpg'; }}
+                  className="w-24 h-24  rounded-lg"
+                  onError={(e) => {
+                    e.target.src = "/placeholder-product-image.jpg";
+                  }}
                 />
                 <div className="ml-4 flex-1">
                   <h3 className="text-lg font-semibold">{item.name}</h3>
-                  <p className="text-gray-500">{item.description.substring(0, 30)}...</p>
+                  <p className="text-gray-500">
+                    {item.description.substring(0, 30)}...
+                  </p>
                   <p className="text-lg font-semibold">${item.price}</p>
                 </div>
                 <button
@@ -180,25 +199,39 @@ const Cartpage = () => {
 
               {clientToken && (
                 <div className="mt-4">
-                 <div className="p-4 bg-white rounded-md shadow space-y-3">
-  <div>
-    <label className="block text-xs font-medium text-gray-700 mb-1">Card Number</label>
-    <div id="card-number" className="p-2 border border-gray-300 rounded bg-gray-50 hover:border-blue-400 focus-within:border-blue-500 transition duration-200 text-sm"></div>
-  </div>
+                  <div className="p-4 bg-white rounded-md shadow space-y-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Card Number
+                      </label>
+                      <div
+                        id="card-number"
+                        className="p-2 border border-gray-300 rounded bg-gray-50 hover:border-blue-400 focus-within:border-blue-500 transition duration-200 text-sm"
+                      ></div>
+                    </div>
 
-  <div className="grid grid-cols-2 gap-2">
-    <div>
-      <label className="block text-xs font-medium text-gray-700 mb-1">Expiration Date</label>
-      <div id="expiration-date" className="p-2 border border-gray-300 rounded bg-gray-50 hover:border-blue-400 focus-within:border-blue-500 transition duration-200 text-sm"></div>
-    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Expiration Date
+                        </label>
+                        <div
+                          id="expiration-date"
+                          className="p-2 border border-gray-300 rounded bg-gray-50 hover:border-blue-400 focus-within:border-blue-500 transition duration-200 text-sm"
+                        ></div>
+                      </div>
 
-    <div>
-      <label className="block text-xs font-medium text-gray-700 mb-1">CVV</label>
-      <div id="cvv" className="p-2 border border-gray-300 rounded bg-gray-50 hover:border-blue-400 focus-within:border-blue-500 transition duration-200 text-sm"></div>
-    </div>
-  </div>
-</div>
-
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          CVV
+                        </label>
+                        <div
+                          id="cvv"
+                          className="p-2 border border-gray-300 rounded bg-gray-50 hover:border-blue-400 focus-within:border-blue-500 transition duration-200 text-sm"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
 
                   <button
                     className={`w-full p-3 rounded-md mt-4 ${
